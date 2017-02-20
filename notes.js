@@ -1,26 +1,33 @@
 /*jshint esversion: 6 */
-console.log("Starting notes.js");
-
 const fs = require('fs');
 
 
 var getAll = () => {
-	console.log("Getting all notes");
+	return fetchNotes();
 };
 
+
+var fetchNotes = () => {
+	try {
+		var noteString = fs.readFileSync('note-data.json');
+		return JSON.parse(noteString);
+	} catch (e) {
+		console.log('Warn. No data file.');
+		return [];
+	}
+};
+
+var saveNotes = (notes) => {
+	fs.writeFileSync('note-data.json', JSON.stringify(notes));
+};
+
+
 var addNote = (title, body) => {
-	var notes = [];
+	var notes = fetchNotes();
 	var note = {
 		title,
 		body
 	};
-
-	try {
-		var noteString = fs.readFileSync('note-data.json');
-		notes = JSON.parse(noteString);
-	} catch (e) {
-		console.log('Warn. No data file.');
-	}
 
 	var duplicateNotes = notes.filter((note) => {
 		return note.title === title;
@@ -28,23 +35,39 @@ var addNote = (title, body) => {
 
 	if (duplicateNotes.length === 0) {
 		notes.push(note);
-		fs.writeFileSync('note-data.json', JSON.stringify(notes));
+		saveNotes(notes);
+		return note;
 	}
-
 };
 
 var readNote = (title) => {
 	console.log("Reading note: ", title);
+	var notes = fetchNotes();
+	var readNotes = notes.filter((note) => {
+		return note.title === title;
+	});
+	return readNotes[0];
+
 };
 
 var removeNote = (title) => {
-	console.log("Removing note: ", title);
+	var notes = fetchNotes();
+	var filteredNotes = notes.filter((note) => {
+		return note.title !== title;
+	});
+	saveNotes(filteredNotes);
+	return notes.length !== filteredNotes.length;
 };
 
+var logNote = (note) => {
+	console.log(note.title);
+	console.log(note.body);
+};
 
 module.exports = {
 	getAll: getAll,
 	addNote: addNote,
 	readNote: readNote,
-	removeNote: removeNote
+	removeNote: removeNote,
+	logNote: logNote
 };
